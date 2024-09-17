@@ -3,6 +3,8 @@
 #define YELLOW_LED 6
 #define button A5
 
+//todo check if one button is pressed.
+
 // Define the number of buttons
 const int num_buttons = 3;
 
@@ -67,7 +69,7 @@ void loop() {
             led_on = true;
             led_on_time = millis(); // Record the time when LED was turned on
         }
-        if (millis() - led_on_time >= 10000) {
+        if (millis() - led_on_time >= 10000)  {
             digitalWrite(YELLOW_LED, LOW);
             led_on = false;
         }
