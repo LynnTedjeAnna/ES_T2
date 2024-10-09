@@ -1,0 +1,15 @@
+@startuml
+[*] --> Idle : Initialization
+Idle -[#gray]-> Red : Setup completed
+
+Red : Stop traffic
+Red -[#green]-> Green : Timer expired
+Green : Allow traffic
+
+Green -[#yellow]-> Yellow : Timer expired
+Yellow : Warning
+Yellow -[#red]-> Red : Timer expired
+
+Red -[#black]-> [*] : System shutdown
+
+@enduml

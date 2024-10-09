@@ -1,0 +1,11 @@
+@startuml
+
+actor "Traffic Light 1 (Master)" as TrafficLight1
+actor "Traffic Light 2 (Slave)" as TrafficLight2
+actor "Control System" as ControlSystem
+
+TrafficLight1 -[#red]-> TrafficLight2: Communicate using Serial Protocol
+ControlSystem -[#green]-> TrafficLight1: Set Timing and Parameters
+ControlSystem -[#blue]-> TrafficLight2: Monitor or Override Settings
+
+@enduml
