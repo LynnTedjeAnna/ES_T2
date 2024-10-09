@@ -5,100 +5,122 @@
 #define RED_LED 13
 #define YELLOW_LED 12
 #define GREEN_LED 11
-#define hb_pin 7
+#define HB_PIN 7
 
-unsigned long last_hb_time = 0;
-unsigned long hb_timeout = 5000;  // Timeout: 5 seconds
+uint32_t prev = 0;
+uint32_t green_duration = 10000;   // 10 seconds for green light
+uint32_t yellow_duration = 3000;   // 3 seconds for yellow light
 
 SoftwareSerial s_serial(2, 3, 100);  // RX on pin 2, TX on pin 3
 
-enum Traffic_state { GREEN, YELLOW, RED };
-Traffic_state current_state = RED;  // Start with RED as opposite to the Master
+enum Traffic_state {
+    GREEN = 'G',
+    YELLOW = 'Y',
+    RED = 'R'
+};
+Traffic_state current_state;
+
+uint8_t send_command_to_slave(Traffic_state command, uint32_t timeout);
+Traffic_state receive_command_from_master();
+void handle_communication_error();
+void set_state(Traffic_state state);
 
 void setup() {
     Serial.begin(9600);               // For debugging
+    s_serial.begin(9600);
+
     pinMode(RED_LED, OUTPUT);
     pinMode(YELLOW_LED, OUTPUT);
     pinMode(GREEN_LED, OUTPUT);
-    pinMode(hb_pin, INPUT);
-    s_serial.begin(9600);
+    pinMode(HB_PIN, INPUT);
 
-    digitalWrite(RED_LED, HIGH);      // Start with the RED light ON for the Slave
+    set_state(RED);
+    set_state(receive_command_from_master());
 }
 
-void handleLostConnection() {
-    digitalWrite(YELLOW_LED, LOW);
-    digitalWrite(GREEN_LED, LOW);
-    digitalWrite(RED_LED, HIGH);  // Turn on Red light for safety
-    s_serial.write('E');
+uint8_t send_command_to_slave(Traffic_state command, uint32_t timeout) {
+    uint32_t start = millis();
+    do {
+        s_serial.write(command);
+        delay(10);
+    } while(!s_serial.available() && (millis() - start < timeout));
+    if (!s_serial.available() || s_serial.read() != command) {
+        handle_communication_error();
+        return 0;  // error
+    }
+    // todo: if loop error handler is called too often, clear the buffer here!
+    return 1;  // success
+}
 
-    Serial.println("Lost connection, turned RED");        // Debugging output
-
-    // Attempt recovery by waiting for the master's command
-    while (true) {
-        if (s_serial.available()) {
-            char command = s_serial.read();
-            if (command == 'R') {
-                // Synchronize with the master's safe state (RED)
-                digitalWrite(RED_LED, HIGH);
-                s_serial.write('A');
-                break;
-            }
+Traffic_state receive_command_from_master() {
+    while (1) {
+        while (!s_serial.available());
+        char s = (char)s_serial.read();
+        if (s == RED || s == GREEN) {
+            s_serial.write(s);
+            return (Traffic_state)s;
         }
-        delay(500);  // Retry every 500ms
     }
 }
 
+void handle_communication_error() {
+    set_state(RED);
+    send_command_to_slave(RED, -1);  // wait indefinitely
+}
+
+void set_state(Traffic_state state) {
+    // todo change if ya want! :)
+    digitalWrite(RED_LED, state==RED);        // led on if state is RED, else off
+    digitalWrite(YELLOW_LED, state==YELLOW);  // led on if state is YELLOW, else off
+    digitalWrite(GREEN_LED, state==GREEN);    // led on if state is GREEN, else off
+    current_state = state;
+    prev = millis();
+}
+
+
+
 void loop() {
-    uint64_t current_millis = millis();
+    uint32_t now = millis();
 
-    // Check if the heartbeat signal is HIGH (pulse received)
-    if (digitalRead(hb_pin) == HIGH) {
+    if (s_serial.available() && current_state != RED) {
+        handle_communication_error();
+    }
+
+    switch (current_state) {
+    case GREEN:
+        if (now - prev < green_duration) { break; }
+        set_state(YELLOW);
+        break;
+    case YELLOW:
+        if (now - prev < yellow_duration) { break; }
+        if (!send_command_to_slave(GREEN, 1000)) { break; }
+        set_state(RED);
+        break;
+    case RED:
+        set_state(receive_command_from_master());
+        break;
+    default:
+        Serial.print("How did we get here?");
+        handle_communication_error();
+        break;
+    }
+}
+
+
+/*
+uint32_t last_hb_time = 0;
+uint32_t hb_timeout = 5000;  // Timeout: 5 seconds
+
+
+// Check if the heartbeat signal is HIGH (pulse received)
+    if (digitalRead(HB_PIN) == HIGH) {
         last_hb_time = millis();
-
         Serial.println("Heartbeat detected!");  // Debugging output
     }
 
     // If more than 5 seconds have passed without a heartbeat, handle the lost connection
     if (current_millis - last_hb_time > hb_timeout) {
-        handleLostConnection();
+        set_state(RED);
         last_hb_time = millis();
     }
-
-    if (s_serial.available()) {
-        char command = s_serial.read();
-
-        Serial.print("Received command: "); // Debugging output
-        Serial.println(command);
-
-        // Turn off all lights before setting the new state
-        digitalWrite(RED_LED, LOW);
-        digitalWrite(YELLOW_LED, LOW);
-        digitalWrite(GREEN_LED, LOW);
-
-        // Handle the state transitions based on the command received from the Master
-        switch (command) {
-            case 'G':  // Master is RED, Slave can turn GREEN
-                digitalWrite(GREEN_LED, HIGH);
-                current_state = GREEN;
-                s_serial.write('A');  // Send ACK back to the master
-                break;
-
-            case 'Y':
-                digitalWrite(YELLOW_LED, HIGH);
-                current_state = YELLOW;
-                s_serial.write('A');  // Send ACK back to the master
-                break;
-
-            case 'R':  // Master is GREEN, Slave must be RED
-                digitalWrite(RED_LED, HIGH);
-                current_state = RED;
-                s_serial.write('A');  // Send ACK back to the master
-                break;
-
-            default:
-                handleLostConnection();
-                break;
-        }
-    }
-}
+*/
