@@ -1,0 +1,47 @@
+@startuml
+title Master-Slave Arduino Traffic Light System
+
+[*] --> Master_Red_State : Initial Setup
+[*] --> Slave_Red_State : Initial Setup
+
+state "Master" as Master {
+    [*] --> Master_Red_State
+    Master_Red_State : RED Light On
+    Master_Red_State --> Master_Green_State : Receive RED confirmation from Slave
+    Master_Red_State -[#red]-> Master_Green_State
+
+    Master_Green_State : GREEN Light On
+    Master_Green_State --> Master_Yellow_State : After green_duration timeout
+    Master_Green_State -[#green]-> Master_Yellow_State
+
+    Master_Yellow_State : YELLOW Light On
+    Master_Yellow_State --> Master_Red_State : After yellow_duration timeout and Slave responds with GREEN
+    Master_Yellow_State -[#yellow]-> Master_Red_State
+
+    Master_Red_State --> Master_Error_State : Communication error
+    Master_Error_State : Error Handler
+    Master_Error_State --> Master_Red_State : Handle error, send RED to Slave
+}
+
+state "Slave" as Slave {
+    [*] --> Slave_Red_State
+    Slave_Red_State : RED Light On
+    Slave_Red_State -[#red]-> Slave_Green_State : Command from Master (GREEN)
+
+    Slave_Green_State : GREEN Light On
+    Slave_Green_State -[#green]-> Slave_Yellow_State : After green_duration timeout
+
+    Slave_Yellow_State : YELLOW Light On
+    Slave_Yellow_State -[#yellow]-> Slave_Red_State : After yellow_duration timeout
+
+    Slave_Red_State --> Slave_Error_State : Communication error
+    Slave_Error_State : Error Handler
+    Slave_Error_State --> Slave_Red_State : Handle error
+}
+
+Master --> Slave : Send traffic state (RED, GREEN, YELLOW)
+Slave --> Master : Respond to state commands
+Master_Red_State --> Slave_Red_State : Send RED to Slave
+Slave_Red_State --> Master_Red_State : Confirm RED to Master
+
+@enduml
