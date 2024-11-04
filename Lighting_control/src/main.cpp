@@ -36,9 +36,6 @@ void loop() {
     for (int i = 0; i < num_buttons; i++) {
         if (button_read > button_thresholds[i][0] && button_read < button_thresholds[i][1]) {
             if (!button_pressed[i]) {
-                Serial.print("Button ");        //test print
-                Serial.print(i);                //test print
-                Serial.println(" pressed!");    //test print
                 button_pressed[i] = true;  // Mark this button as pressed
             }
         } else {
