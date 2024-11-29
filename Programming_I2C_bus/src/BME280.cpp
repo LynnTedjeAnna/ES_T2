@@ -20,6 +20,7 @@
 #define BME280_REG_HUM_MSB 0xFD     /* (...FE) */
 
 
+
 // Initialize sensor settings
 void BME280::BME280_init(uint8_t ctrl_hum, uint8_t ctrl_meas) {
     BME280_Reset();
