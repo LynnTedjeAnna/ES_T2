@@ -1,12 +1,4 @@
 #include <Arduino.h>
-/*TODO:
- * 1. Each button must be handled by the correct interrupt service routine and make sure
- *      that the LEDs change state when the button is pressed on the right edge only.
- * Do not use “expensive functions” in your interrupt service routines, i.e. an interrupt
- * service routine (isr) must be quick and short at all times.
- * It is not allowed to use digitalwrite(), digitalread(), pinmode(),
- * attachInterrupt() or other library functions that handle GPIO.
- * */
 
 #define GREEN_BTN_MODE DDRB                     /* ddr (Data Direction Register) register for button */
 #define GREEN_BTN_IN PINB                       /* pin (input data) register for button */
