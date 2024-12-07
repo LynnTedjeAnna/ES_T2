@@ -1,15 +1,5 @@
 #include <Arduino.h>
 
-#define GREEN_BTN_MODE DDRB                     /* ddr (Data Direction Register) register for button */
-#define GREEN_BTN_IN PINB                       /* pin (input data) register for button */
-#define GREEN_BTN_POS 3                         /* bit position for pin B3 (11) */
-#define GREEN_BTN_MASK (1 << GREEN_BTN_POS)     /* bitmask for pin B3 (11) */
-
-#define YELLOW_BTN_MODE DDRB                    /* ddr (Data Direction Register) register for button */
-#define YELLOW_BTN_IN PINB                       /* pin (input data) register for button */
-#define YELLOW_BTN_POS 2                        /* bit position for pin B2 (10) */
-#define YELLOW_BTN_MASK (1 << YELLOW_BTN_POS)   /* bitmask for pin B2 (10) */
-
 #define GREEN_LED_MODE DDRD                     /* ddr (Data Direction Register) register for led */
 #define GREEN_LED_OUT PORTD                     /* port (output data) register for green led */
 #define GREEN_LED_POS 6                         /* bitmask for pin D6 (6) */
@@ -38,24 +28,20 @@ volatile uint8_t ylw_led_state = 0;          // State of the yellow LED
 
 void setup() {
     Serial.begin(9600);
-
-    YELLOW_BTN_MODE &= ~YELLOW_BTN_MASK;    // set pin B4 as input
-    GREEN_BTN_MODE &= ~GREEN_BTN_MASK;      // set pin B3 as input
-
     GREEN_LED_MODE |= GREEN_LED_MASK;       // set pin D6 as output
     YELLOW_LED_MODE |= YELLOW_LED_MASK;     // set pin D5 as output
 
     GREEN_LED_OUT &= ~GREEN_LED_MASK;       // Initialize led to off
     YELLOW_LED_OUT &= ~YELLOW_LED_MASK;     // Initialize led to off
 
-    // Configure INT0 for the Green Button on falling edge
+    // Configure INT0 for the Green Button on toggle
     EICRA |= (1 << ISC00);                  // Set ISC00 to 1
-    EICRA &= ~(1 << ISC01);                 // Clear ISC01 to 0
+    EICRA &= ~(1 << ISC01);                 // Clear ISC01 to 1
     EIMSK |= (1 << INT0);                   // Enable INT0 interrupt
 
-    // Configure INT1 for the Yellow Button on falling edge
+    // Configure INT1 for the Yellow Button on toggle
     EICRA |= (1 << ISC10);                  // Set ISC10 to 1
-    EICRA &= ~(1 << ISC11);                 // Clear ISC11 to 0
+    EICRA &= ~(1 << ISC11);                 // Clear ISC11 to 1
     EIMSK |= (1 << INT1);                   // Enable INT1 interrupt
 
     sei();  // Enable global interrupts
