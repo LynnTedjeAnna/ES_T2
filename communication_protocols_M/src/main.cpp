@@ -9,7 +9,6 @@
 uint32_t prev = 0;
 uint32_t green_duration = 10000;   // 10 seconds for green light
 uint32_t yellow_duration = 3000;   // 3 seconds for yellow light
-uint32_t slave_timeout = 20000;     // 20 seconds max red
 
 enum Traffic_state {
     GREEN = 'G',
@@ -52,6 +51,7 @@ uint8_t send_command_to_slave(Traffic_state command, uint32_t timeout) {
     // todo: if loop error handler is called too often, clear the buffer here!
     return 1;  // success
 }
+
 Traffic_state receive_command_from_master() {
     while (1) {
         while (!s_serial.available());

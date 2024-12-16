@@ -9,7 +9,6 @@
 uint32_t prev = 0;
 uint32_t green_duration = 10000;   // 10 seconds for green light
 uint32_t yellow_duration = 3000;   // 3 seconds for yellow light
-uint32_t slave_timeout = 20000;     // 20 seconds max red
 
 SoftwareSerial s_serial(2, 3, 100);  // RX on pin 2, TX on pin 3
 
@@ -44,7 +43,6 @@ uint8_t send_command_to_slave(Traffic_state command, uint32_t timeout) {
         delay(10);
     } while(!s_serial.available() && (millis() - start) < timeout);
 
-    //todo: check if changes correct
     if ((millis() - start) < timeout || s_serial.read() != command) {
         handle_communication_error();
         return 0;  // error
