@@ -135,7 +135,6 @@ ISR(INT1_vect) {
 
 // Display the binary counter on LEDs
 void display_counter() {
-    //todo
     uint8_t lsb = (counter & 0b11) << YELLOW_LED_POS;   // Yellow and green led
     uint8_t msb = (counter & 0b1100) >> 2;              // Red and white led
 
